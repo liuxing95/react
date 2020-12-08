@@ -1309,7 +1309,10 @@ export function popRenderLanes(fiber: Fiber) {
   popFromStack(subtreeRenderLanesCursor, fiber);
 }
 
+// 准备一个全新的栈
+// 真正工作之前做一些准备
 function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
+  // 重置根节点的 finishedWork
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
 
@@ -1323,13 +1326,17 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   }
 
   if (workInProgress !== null) {
+    // 如果已经存在了 workInProgress ，说明存在未完成的任务
+     // 向上找到它的root fiber
     let interruptedWork = workInProgress.return;
     while (interruptedWork !== null) {
+      // unwindInterruptedWork // 抹去未完成的任务
       unwindInterruptedWork(interruptedWork);
       interruptedWork = interruptedWork.return;
     }
   }
   workInProgressRoot = root;
+  // 创建双向缓冲对象
   workInProgress = createWorkInProgress(root.current, null);
   workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
   workInProgressRootExitStatus = RootIncomplete;
@@ -1645,6 +1652,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 /** @noinline */
 function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
+  // 执行工作直到 Scheduler 要求我们 yield
+  // 跳出条件只有：
+  // 当所有fiber都已经遍历结束了
+  // 当前线程的使用权移交给了外部任务队列
   while (workInProgress !== null && !shouldYield()) {
     performUnitOfWork(workInProgress);
   }

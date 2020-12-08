@@ -147,6 +147,7 @@ function FiberNode(
   this.subtreeFlags = NoFlags;
   this.deletions = null;
 
+  // 取消了 expirationTime
   this.lanes = NoLanes;
   this.childLanes = NoLanes;
 
@@ -257,12 +258,18 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     // node that we're free to reuse. This is lazily created to avoid allocating
     // extra objects for things that are never updated. It also allow us to
     // reclaim the extra memory if needed.
+    // / 如果当前fiber没有alternate
+    // tip: 这里使用的是“双缓冲池技术”，因为我们最多需要一棵树的两个实例。
+    // tip: 我们可以自由的复用未使用的节点
+    // tip: 这是异步创建的，避免使用额外的对象
+    // tip: 这同样支持我们释放额外的内存（如果需要的话
     workInProgress = createFiber(
       current.tag,
       pendingProps,
       current.key,
       current.mode,
     );
+    // TODO:
     workInProgress.elementType = current.elementType;
     workInProgress.type = current.type;
     workInProgress.stateNode = current.stateNode;
@@ -275,9 +282,11 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
 
+    // 要让这俩东西互相指向
     workInProgress.alternate = current;
     current.alternate = workInProgress;
   } else {
+    // 如果已经有了一个 workInProgress
     workInProgress.pendingProps = pendingProps;
     // Needed because Blocks store data on type.
     workInProgress.type = current.type;

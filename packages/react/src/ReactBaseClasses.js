@@ -21,6 +21,7 @@ function Component(props, context, updater) {
   this.props = props;
   this.context = context;
   // If a component has string refs, we will assign a different object later.
+  // 转义 字符串类型的 refs 为 object 类型
   this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
@@ -89,6 +90,7 @@ Component.prototype.forceUpdate = function(callback) {
  * modern base class. Instead, we define a getter that warns if it's accessed.
  */
 if (__DEV__) {
+  // 废弃的api
   const deprecatedAPIs = {
     isMounted: [
       'isMounted',
